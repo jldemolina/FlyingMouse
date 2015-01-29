@@ -12,6 +12,9 @@ public class MouseController : MonoBehaviour {
 
 	public ParticleSystem jetpack;
 
+	private bool dead = false;
+
+	private uint coins = 0;
 
 	// Use this for initialization
 	void Start () {
@@ -20,21 +23,43 @@ public class MouseController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
-	}
-
-	void FixedUpdate () {
 		bool jetpackActive = Input.GetButton("Fire1");
+		
+		jetpackActive = jetpackActive && !dead;
 		
 		if (jetpackActive) {
 			rigidbody2D.AddForce(new Vector2(0, jetpackForce));
 		}
-
-		Vector2 newVelocity = rigidbody2D.velocity;
-		newVelocity.x = forwardMovementSpeed;
-		rigidbody2D.velocity = newVelocity;
-
+		
+		if (!dead) {
+			Vector2 newVelocity = rigidbody2D.velocity;
+			newVelocity.x = forwardMovementSpeed;
+			rigidbody2D.velocity = newVelocity;
+		}
+		
 		UpdateGroundedStatus();
+		
+		AdjustJetpack(jetpackActive);
+	}
+
+	void FixedUpdate () 
+	{
+		bool jetpackActive = Input.GetButton("Fire1");
+		
+		jetpackActive = jetpackActive && !dead;
+		
+		if (jetpackActive) {
+			rigidbody2D.AddForce(new Vector2(0, jetpackForce));
+		}
+		
+		if (!dead) {
+			Vector2 newVelocity = rigidbody2D.velocity;
+			newVelocity.x = forwardMovementSpeed;
+			rigidbody2D.velocity = newVelocity;
+		}
+		
+		UpdateGroundedStatus();
+		
 		AdjustJetpack(jetpackActive);
 	}
 
@@ -48,5 +73,21 @@ public class MouseController : MonoBehaviour {
 		jetpack.emissionRate = jetpackActive ? 300.0f : 75.0f; 
 	}
 
+	void OnTriggerEnter2D(Collider2D collider) {
+		if (collider.gameObject.CompareTag("Coins"))
+			CollectCoin(collider);
+		else
+			HitByLaser(collider);
+	}
+	
+	void HitByLaser(Collider2D laserCollider) {
+		animator.SetBool("dead", true);
+		dead = true;
+	}
+
+	void CollectCoin(Collider2D coinCollider) {
+		coins++;
+		Destroy(coinCollider.gameObject);
+	}
 
 }
